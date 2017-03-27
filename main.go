@@ -17,21 +17,35 @@ import (
 	"time"
 
 	"fmt"
+	"html"
+	"log"
 	"unsafe"
 )
 
-func main() {
-	resp, err := http.Get("https://cn.bing.com/")
+const (
+	URL  = "https://cn.bing.com/"
+	DURL = "https://cn.bing.com/cnhp/life?IID=%s&IG=%s" // detailed page url
+)
+
+func fetchWebPage(url string) string {
+	log.Println("Connecting...")
+	resp, err := http.Get(url)
 	if err != nil {
 		panic("Address unreachable " + err.Error())
 	}
 	webpagesrcbyte, _ := ioutil.ReadAll(resp.Body)
-	webpagesrc := string(webpagesrcbyte)
+	log.Println("Fetched page")
+	return string(webpagesrcbyte)
+}
+
+func saveImage(src string) string {
 	re := regexp.MustCompile("g_img=\\{url:\\s\"(.+\\.jpg)\"")
-	imgurl := re.FindStringSubmatch(webpagesrc)[1]
-	resp, err = http.Get("https://cn.bing.com" + imgurl)
+	imgurl := re.FindStringSubmatch(src)[1]
+	log.Println(imgurl)
+	resp, err := http.Get("https://cn.bing.com" + imgurl)
 	if err != nil {
-		panic("Unable to download image " + err.Error())
+		log.Println("Unable to download image " + err.Error())
+		return ""
 	}
 	fileName := imgurl[strings.LastIndex(imgurl, "/")+1:]
 	imgdata, _ := ioutil.ReadAll(resp.Body)
@@ -41,10 +55,97 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	return path
+}
+
+func setWindowsWallPaper(path string) {
 	path = strings.Replace(path, "/", "\\", -1)
 	fmt.Println(path)
 
 	cs := C.CString(path)
 	defer C.free(unsafe.Pointer(cs))
 	C.change_wallpaper(cs)
+}
+
+func getIG(src string) string {
+	re := regexp.MustCompile("IG:\"(\\w+?\\d+?)\"")
+	found := re.FindStringSubmatch(src)
+	if len(found) < 1 {
+		return ""
+	}
+	log.Println(found[1])
+	return found[1]
+}
+
+func getIID(src string) string {
+	re := regexp.MustCompile("_iid=\"(\\w{4}\\.\\d{4})\">")
+	found := re.FindStringSubmatch(src)
+	if len(found) < 1 {
+		return ""
+	}
+	log.Println(found[1])
+	return found[1]
+}
+
+func getTitle(src string) string {
+	re := regexp.MustCompile("<div class=\"hplaTtl\">(.+?)</div>")
+	found := re.FindStringSubmatch(src)
+	if len(found) < 1 {
+		return ""
+	}
+	return found[1]
+}
+
+func getLocation(src string) string {
+	re := regexp.MustCompile("<span class=\"hplaAttr\">(.+?)</span>")
+	found := re.FindStringSubmatch(src)
+	if len(found) < 1 {
+		return ""
+	}
+	return found[1]
+}
+
+func getArticle(src string) (title string, subtitle string, body string) {
+	re := regexp.MustCompile("<div class=\"hplatt\">(.+?)</div>")
+	m := re.FindStringSubmatch(src)
+	if len(m) < 1 {
+		return
+	}
+	title = m[1]
+	re = regexp.MustCompile("<div class=\"hplats\">(.+?)</div>")
+	subtitle = re.FindStringSubmatch(src)[1]
+	re = regexp.MustCompile("<div id=\"hplaSnippet\">(.+?)</div>")
+	body = re.FindStringSubmatch(src)[1]
+	return
+}
+
+func main() {
+	for {
+		webpagesrc := fetchWebPage(URL)
+		ioutil.WriteFile("log.html.txt", []byte(webpagesrc), 0666)
+
+		path := saveImage(webpagesrc)
+		if path == "" {
+			continue
+		}
+		iid := getIID(webpagesrc)
+		ig := getIG(webpagesrc)
+		if ig == "" {
+			continue
+		}
+
+		webpagesrc = fetchWebPage(fmt.Sprintf(DURL, iid, ig))
+		fmt.Println(getTitle(webpagesrc))
+		fmt.Println(getLocation(webpagesrc))
+		_, _, a := getArticle(webpagesrc)
+		img := readImage(path)
+		a = html.UnescapeString(a)
+		t := splitText(a)
+		fmt.Println(t)
+		drawText(img, t)
+		cdir, _ := os.Getwd()
+		setWindowsWallPaper(cdir + "/out.jpg")
+		log.Println("Done")
+		break
+	}
 }
