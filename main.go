@@ -24,7 +24,7 @@ import (
 
 const (
 	URL  = "https://cn.bing.com/"
-	DURL = "https://cn.bing.com/cnhp/life?IID=%s&IG=%s" // detailed page url
+	DURL = "https://cn.bing.com/cnhp/life?IID=%s&IG=%s" // page containing description
 )
 
 func fetchWebPage(url string) string {

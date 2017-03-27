@@ -62,15 +62,16 @@ func getWidthAndHeight(lines int) (w, h int) {
 }
 
 func drawText(canvas image.Image, text []string) {
-	rgba := image.NewRGBA(canvas.Bounds())
-	draw.Draw(rgba, rgba.Bounds(), canvas, image.ZP, draw.Src)
-	mask := image.NewUniform(color.RGBA{R: 0, G: 0, B: 0, A: 100})
-	x0, y0 := getOffset(canvas)
-	w, h := getWidthAndHeight(len(text))
+	rgba := image.NewRGBA(canvas.Bounds())                         // image to draw, same size as input image
+	draw.Draw(rgba, rgba.Bounds(), canvas, image.ZP, draw.Src)     // copy input image to it
+	mask := image.NewUniform(color.RGBA{R: 0, G: 0, B: 0, A: 100}) // background of text
+	x0, y0 := getOffset(canvas)                                    // x, y coordinate
+	w, h := getWidthAndHeight(len(text))                           // calculate width of the text
 
-	maskrect := image.Rect(x0, y0, x0+w, y0+h)
-	draw.Draw(rgba, maskrect, mask, image.ZP, draw.Over)
+	maskrect := image.Rect(x0, y0, x0+w, y0+h)           // background location and size
+	draw.Draw(rgba, maskrect, mask, image.ZP, draw.Over) // draw background
 
+	// font rendering
 	c := freetype.NewContext()
 	c.SetDPI(dpi)
 	c.SetFont(readFont("C:/Windows/Fonts/inziu-SC-regular.ttc"))
@@ -82,8 +83,8 @@ func drawText(canvas image.Image, text []string) {
 	// c.SetHinting(font.HintingNone)
 	c.SetHinting(font.HintingFull)
 
-	textAnchorX, textAnchorY := x0, y0
-	pt := freetype.Pt(textAnchorX+10, textAnchorY+10+int(c.PointToFixed(size)>>6))
+	textX, textY := x0, y0 // text x, y
+	pt := freetype.Pt(textX+10, textY+10+int(c.PointToFixed(size)>>6))
 	for _, s := range text {
 		_, err := c.DrawString(s, pt)
 		if err != nil {
@@ -93,6 +94,7 @@ func drawText(canvas image.Image, text []string) {
 		pt.Y += c.PointToFixed(size * spacing)
 	}
 
+	// output to temp file
 	outFile, err := os.Create("out.jpg")
 	if err != nil {
 		log.Println(err)
@@ -127,9 +129,12 @@ func splitText(text string) []string {
 	textRune := []rune(text)
 	for i := 0; i < len(textRune); i += wordsPerLine {
 		if len(textRune)-i < wordsPerLine {
+			// last line
 			result = append(result, string(textRune[i:]))
 		} else {
 			ac := getASCIICharCount(textRune[i : i+wordsPerLine])
+
+			// when the string is mixed with ASCII and non-ASCII characters
 			result = append(result, string(textRune[i:i+wordsPerLine+ac]))
 			i += ac
 		}
