@@ -135,12 +135,13 @@ func main() {
 		}
 
 		webpagesrc = fetchWebPage(fmt.Sprintf(DURL, iid, ig))
-		fmt.Println(getTitle(webpagesrc))
-		fmt.Println(getLocation(webpagesrc))
+		title := getTitle(webpagesrc)
+		location := getLocation(webpagesrc)
 		_, _, a := getArticle(webpagesrc)
 		img := readImage(path)
 		a = html.UnescapeString(a)
 		t := splitText(a)
+		t = append([]string{title, location, " "}, t...)
 		fmt.Println(t)
 		drawText(img, t)
 		cdir, _ := os.Getwd()

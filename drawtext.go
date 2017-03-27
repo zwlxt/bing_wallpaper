@@ -17,6 +17,15 @@ import (
 	"github.com/golang/freetype/truetype"
 )
 
+const (
+	size             = 20
+	dpi              = 72
+	spacing          = 1.5
+	wordsPerLine     = 15
+	offsetx, offsety = 1600, 50
+	textColor        = 0xe000
+)
+
 func readImage(path string) image.Image {
 	f, err := os.Open(path)
 	if err != nil {
@@ -41,14 +50,6 @@ func readFont(path string) *truetype.Font {
 	return font
 }
 
-const (
-	size             = 25
-	dpi              = 72
-	spacing          = 1.5
-	wordsPerLine     = 15
-	offsetx, offsety = 1500, 100
-)
-
 func getOffset(canvas image.Image) (x, y int) {
 	x, y = canvas.Bounds().Min.X+offsetx, canvas.Bounds().Min.Y+offsety
 	return
@@ -56,7 +57,7 @@ func getOffset(canvas image.Image) (x, y int) {
 
 func getWidthAndHeight(lines int) (w, h int) {
 	w = wordsPerLine * (size + 2)
-	h = int((spacing + size + 10) * float64(lines+1))
+	h = int((spacing + size + 8) * float64(lines+1))
 	return
 }
 
@@ -76,7 +77,7 @@ func drawText(canvas image.Image, text []string) {
 	c.SetFontSize(size)
 	c.SetClip(rgba.Bounds())
 	c.SetDst(rgba)
-	tc := image.NewUniform(color.Alpha16{0xC000})
+	tc := image.NewUniform(color.Alpha16{textColor})
 	c.SetSrc(tc)
 	// c.SetHinting(font.HintingNone)
 	c.SetHinting(font.HintingFull)
