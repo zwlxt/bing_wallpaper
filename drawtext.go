@@ -21,8 +21,8 @@ const (
 	size             = 20
 	dpi              = 72
 	spacing          = 1.5
-	wordsPerLine     = 15
-	offsetx, offsety = 1600, 50
+	wordsPerLine     = 16
+	offsetx, offsety = 1500, 50
 	textColor        = 0xe000
 )
 
@@ -39,6 +39,10 @@ func readImage(path string) image.Image {
 }
 
 func readFont(path string) *truetype.Font {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		path = "C:/Windows/Fonts/" + path
+	}
+	log.Println("Font:" + path)
 	fontBytes, err := ioutil.ReadFile(path)
 	if err != nil {
 		panic(err)
@@ -74,7 +78,7 @@ func drawText(canvas image.Image, text []string) {
 	// font rendering
 	c := freetype.NewContext()
 	c.SetDPI(dpi)
-	c.SetFont(readFont("C:/Windows/Fonts/inziu-SC-regular.ttc"))
+	c.SetFont(readFont("inziu-SC-regular.ttc"))
 	c.SetFontSize(size)
 	c.SetClip(rgba.Bounds())
 	c.SetDst(rgba)
@@ -114,6 +118,10 @@ func drawText(canvas image.Image, text []string) {
 	}
 }
 
+func isASCIIChar(c rune) bool {
+	return c >= 0x20 && c <= 0x7e
+}
+
 func getASCIICharCount(r []rune) int {
 	result := 0
 	for _, c := range r {
@@ -124,22 +132,26 @@ func getASCIICharCount(r []rune) int {
 	return result
 }
 
-func splitText(text string) []string {
-	var result []string
-	textRune := []rune(text)
-	for i := 0; i < len(textRune); i += wordsPerLine {
-		if len(textRune)-i < wordsPerLine {
-			// last line
-			result = append(result, string(textRune[i:]))
-		} else {
-			ac := getASCIICharCount(textRune[i : i+wordsPerLine])
+var sl []string
 
-			// when the string is mixed with ASCII and non-ASCII characters
-			result = append(result, string(textRune[i:i+wordsPerLine+ac]))
-			i += ac
+func splitText(s string) {
+	r := []rune(s)
+	if len(r) > wordsPerLine {
+		ac := getASCIICharCount(r[:wordsPerLine])
+		forward := 0
+		i := 0
+		for ; forward < ac; i++ {
+			if !isASCIIChar(r[wordsPerLine+i]) {
+				forward += 2
+			} else {
+				forward++
+			}
 		}
+		sl = append(sl, string(r[:wordsPerLine+i]))
+		splitText(string(r[wordsPerLine+i:]))
+	} else {
+		sl = append(sl, s)
 	}
-	return result
 }
 
 // func main() {
