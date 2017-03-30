@@ -50,6 +50,9 @@ func saveImage(src string) string {
 	fileName := imgurl[strings.LastIndex(imgurl, "/")+1:]
 	imgdata, _ := ioutil.ReadAll(resp.Body)
 	cdir, _ := os.Getwd()
+	if _, err := os.Stat(cdir + "/wallpapers"); os.IsNotExist(err) {
+		os.Mkdir(cdir+"/wallpapers", 0666)
+	}
 	path := cdir + "/wallpapers/" + time.Now().Format("2006_01_02") + "_" + fileName
 	err = ioutil.WriteFile(path, imgdata, os.ModeAppend)
 	if err != nil {
@@ -122,7 +125,7 @@ func getArticle(src string) (title string, subtitle string, body string) {
 func main() {
 	for {
 		webpagesrc := fetchWebPage(URL)
-		ioutil.WriteFile("log.html.txt", []byte(webpagesrc), 0666)
+		//ioutil.WriteFile("log.html.txt", []byte(webpagesrc), 0666)
 
 		path := saveImage(webpagesrc)
 		if path == "" {
