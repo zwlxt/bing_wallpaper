@@ -76,7 +76,7 @@ func getIG(src string) string {
 	if len(found) < 1 {
 		return ""
 	}
-	log.Println(found[1])
+	log.Println("IG:" + found[1])
 	return found[1]
 }
 
@@ -86,7 +86,7 @@ func getIID(src string) string {
 	if len(found) < 1 {
 		return ""
 	}
-	log.Println(found[1])
+	log.Println("IID:" + found[1])
 	return found[1]
 }
 

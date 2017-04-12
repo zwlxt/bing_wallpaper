@@ -135,12 +135,16 @@ func getASCIICharCount(r []rune) int {
 var sl []string
 
 func splitText(s string) {
+	log.Println(s)
 	r := []rune(s)
 	if len(r) > wordsPerLine {
 		ac := getASCIICharCount(r[:wordsPerLine])
 		forward := 0
 		i := 0
 		for ; forward < ac; i++ {
+			if wordsPerLine+i >= len(r) {
+				break
+			}
 			if !isASCIIChar(r[wordsPerLine+i]) {
 				forward += 2
 			} else {
