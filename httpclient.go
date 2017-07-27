@@ -10,7 +10,6 @@ import (
 
 type HttpClient struct {
 	Url, htmlSrc string
-	Storage      StorageManager
 }
 
 func (hc *HttpClient) FetchWebPage() {
@@ -24,7 +23,7 @@ func (hc *HttpClient) FetchWebPage() {
 	hc.htmlSrc = string(webpagesrcbyte)
 }
 
-func (hc *HttpClient) saveImage() string {
+func (hc *HttpClient) GetImage() (string, []byte) {
 	re := regexp.MustCompile("g_img=\\{url:\\s\"(.+\\.jpg)\"")
 	imgurl := re.FindStringSubmatch(hc.htmlSrc)[1]
 	log.Println(imgurl)
@@ -34,11 +33,10 @@ func (hc *HttpClient) saveImage() string {
 	}
 	fileName := imgurl[strings.LastIndex(imgurl, "/")+1:]
 	imgdata, _ := ioutil.ReadAll(resp.Body)
-	hc.Storage.Save(imgdata, fileName)
-	return fileName
+	return fileName, imgdata
 }
 
-func (hc *HttpClient) getIG() string {
+func (hc *HttpClient) GetIG() string {
 	re := regexp.MustCompile("IG:\"(\\w+?\\d+?)\"")
 	found := re.FindStringSubmatch(hc.htmlSrc)
 	if len(found) < 1 {
@@ -48,7 +46,7 @@ func (hc *HttpClient) getIG() string {
 	return found[1]
 }
 
-func (hc *HttpClient) getIID() string {
+func (hc *HttpClient) GetIID() string {
 	re := regexp.MustCompile("_iid=\"(\\w{4}\\.\\d{4})\">")
 	found := re.FindStringSubmatch(hc.htmlSrc)
 	if len(found) < 1 {
@@ -58,7 +56,7 @@ func (hc *HttpClient) getIID() string {
 	return found[1]
 }
 
-func (hc *HttpClient) getTitle() string {
+func (hc *HttpClient) GetTitle() string {
 	re := regexp.MustCompile("<div class=\"hplaTtl\">(.+?)</div>")
 	found := re.FindStringSubmatch(hc.htmlSrc)
 	if len(found) < 1 {
@@ -67,7 +65,7 @@ func (hc *HttpClient) getTitle() string {
 	return found[1]
 }
 
-func (hc *HttpClient) getLocation() string {
+func (hc *HttpClient) GetLocation() string {
 	re := regexp.MustCompile("<span class=\"hplaAttr\">(.+?)</span>")
 	found := re.FindStringSubmatch(hc.htmlSrc)
 	if len(found) < 1 {
@@ -76,7 +74,7 @@ func (hc *HttpClient) getLocation() string {
 	return found[1]
 }
 
-func (hc *HttpClient) getArticle() (title string, subtitle string, body string) {
+func (hc *HttpClient) GetArticle() (title string, subtitle string, body string) {
 	re := regexp.MustCompile("<div class=\"hplatt\">(.+?)</div>")
 	m := re.FindStringSubmatch(hc.htmlSrc)
 	if len(m) < 1 {
