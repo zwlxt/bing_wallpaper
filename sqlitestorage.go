@@ -7,13 +7,14 @@ import (
 )
 
 const (
-	stmtCreateTable = `create table if not exists wallpaper (filename TEXT primary key, content BLOB);`
-	stmtInsertData  = `insert into wallpaper values (?, ?);`
+	stmtCreateTable = `create table if not exists wallpaper (filename TEXT primary key, content BLOB, title TEXT, location TEXT, description TEXT);`
+	stmtInsertData  = `insert into wallpaper values (?, ?, ?, ?, ?);`
 	stmtQueryData   = `select * from wallpaper;`
 )
 
 type SqliteStorage struct {
-	database *sql.DB
+	database                     *sql.DB
+	title, location, description string
 }
 
 func NewSqliteStorage(dbFile string) *SqliteStorage {
@@ -47,9 +48,15 @@ func (s *SqliteStorage) Save(img []byte, name string) {
 	stmt, err := tx.Prepare(stmtInsertData)
 	checkErr(err)
 	defer stmt.Close()
-	_, err = stmt.Exec(name, img)
+	_, err = stmt.Exec(name, img, s.title, s.location, s.description)
 	checkErr(err)
 	tx.Commit()
+}
+
+func (s *SqliteStorage) AdditionDescription(title, location, description string) {
+	s.title = title
+	s.location = location
+	s.description = description
 }
 
 func checkErr(e error) {
