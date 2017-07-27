@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 )
@@ -27,7 +28,8 @@ func (hc *HttpClient) GetImage() (string, []byte) {
 	re := regexp.MustCompile("g_img=\\{url:\\s\"(.+\\.jpg)\"")
 	imgurl := re.FindStringSubmatch(hc.htmlSrc)[1]
 	log.Println(imgurl)
-	resp, err := http.Get(hc.Url + imgurl)
+	u, _ := url.Parse(hc.Url)
+	resp, err := http.Get(u.Scheme + "://" + u.Hostname() + imgurl)
 	if err != nil {
 		log.Println("Unable to download image " + err.Error())
 	}
