@@ -61,7 +61,7 @@ func main() {
 
 		wp := NewWallPaper(config)
 		wp.Decode(imgdata)
-		wp.AddText(title + "\n" + location + "\n" + article)
+		wp.AddText(location + ", " + title + "\n" + article)
 		buf := wp.Encode()
 		fsStorage.Save(buf, "wp_out.jpg")
 		setWindowsWallPaper(installDir + "/wallpapers/wp_out.jpg")
