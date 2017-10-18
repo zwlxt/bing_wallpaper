@@ -11,6 +11,8 @@ import (
 	"os"
 	"strings"
 
+	"gopkg.in/yaml.v2"
+
 	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"
@@ -23,19 +25,40 @@ type Config struct {
 	FontSpacing      float64
 	WordsPerLine     int
 	OffsetX, OffsetY int
-	TextColor        uint16
+	TextColor        color.RGBA
+	BackgroundColor  color.RGBA
+}
+
+func (c Config) Save(filename string) {
+	y, err := yaml.Marshal(c)
+	if err != nil {
+		panic(err)
+	}
+	ioutil.WriteFile(filename, y, 0644)
+}
+
+func (c *Config) Load(filename string) {
+	b, err := ioutil.ReadFile(filename)
+	if err != nil {
+		panic(err)
+	}
+	err = yaml.Unmarshal(b, c)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func DefaultConfig() Config {
 	return Config{
-		FontFile:     "inziu-SC-regular.ttc",
-		FontSize:     20,
-		FontDPI:      72,
-		FontSpacing:  1.5,
-		WordsPerLine: 16,
-		OffsetX:      1500,
-		OffsetY:      50,
-		TextColor:    0xe000,
+		FontFile:        "inziu-SC-regular.ttc",
+		FontSize:        20,
+		FontDPI:         72,
+		FontSpacing:     1.5,
+		WordsPerLine:    16,
+		OffsetX:         1500,
+		OffsetY:         50,
+		TextColor:       color.RGBA{255, 255, 255, 255},
+		BackgroundColor: color.RGBA{R: 0, G: 0, B: 0, A: 100},
 	}
 }
 
@@ -52,10 +75,10 @@ func NewWallPaper(config Config) *WallPaper {
 
 func (wallpaper *WallPaper) AddText(text string) {
 	canvas := wallpaper.img
-	rgba := image.NewRGBA(canvas.Bounds())                         // image to draw, same size as input image
-	draw.Draw(rgba, rgba.Bounds(), canvas, image.ZP, draw.Src)     // copy input image to it
-	mask := image.NewUniform(color.RGBA{R: 0, G: 0, B: 0, A: 100}) // background of text
-	x0, y0 := wallpaper.getOffset(canvas)                          // x, y coordinate
+	rgba := image.NewRGBA(canvas.Bounds())                     // image to draw, same size as input image
+	draw.Draw(rgba, rgba.Bounds(), canvas, image.ZP, draw.Src) // copy input image to it
+	mask := image.NewUniform(wallpaper.config.BackgroundColor) // background of text
+	x0, y0 := wallpaper.getOffset(canvas)                      // x, y coordinate
 
 	// font rendering
 	c := freetype.NewContext()
@@ -64,7 +87,7 @@ func (wallpaper *WallPaper) AddText(text string) {
 	c.SetFontSize(wallpaper.config.FontSize)
 	c.SetClip(rgba.Bounds())
 	c.SetDst(rgba)
-	tc := image.NewUniform(color.Alpha16{wallpaper.config.TextColor})
+	tc := image.NewUniform(wallpaper.config.TextColor)
 	c.SetSrc(tc)
 	c.SetHinting(font.HintingFull)
 
