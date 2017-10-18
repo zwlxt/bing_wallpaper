@@ -23,35 +23,31 @@ func main() {
 		hc1.FetchWebPage()
 		fileName, imgdata := hc1.GetImage()
 		fsStorage.Save(imgdata, fileName)
-		setWindowsWallPaper(wallpaperDir + fileName)
 		ig := hc1.GetIG()
 		if ig == "" {
+			log.Println("Unable to get IG, Retry")
 			continue
 		}
 		iid := hc1.GetIID()
 		if iid == "" {
+			log.Println("Unable to get IID, Retry")
 			continue
 		}
 
 		hc2 := &HttpClient{Url: fmt.Sprintf(DURL, iid, ig)}
 		hc2.FetchWebPage()
-		fmt.Println(hc2.GetTitle())
-		fmt.Println(hc2.GetLocation())
+		title := hc2.GetTitle()
+		location := hc2.GetLocation()
+		_, _, article := hc2.GetArticle()
+		fmt.Println(title)
+		fmt.Println(location)
 
-		// webpagesrc = fetchWebPage(fmt.Sprintf(DURL, iid, ig))
-		// title := getTitle(webpagesrc)
-		// location := getLocation(webpagesrc)
-		// _, _, a := getArticle(webpagesrc)
-		// img := readImage(path)
-		// a = html.UnescapeString(a)
-		// splitText(title)
-		// splitText(location)
-		// splitText(" ")
-		// splitText(a)
-		// fmt.Println(sl)
-		// drawText(img, sl)
-		// cdir, _ := os.Getwd()
-		// setWindowsWallPaper(cdir + "/out.jpg")
+		wp := NewWallPaper(DefaultConfig())
+		wp.Decode(imgdata)
+		wp.AddText(title + location + "\n" + article)
+		buf := wp.Encode()
+		fsStorage.Save(buf, "wp_out.jpg")
+		setWindowsWallPaper(installDir + "/wallpapers/" + "wp_out.jpg")
 		log.Println("Done")
 		break
 	}
