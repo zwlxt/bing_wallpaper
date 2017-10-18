@@ -1,6 +1,7 @@
 package main
 
 import (
+	"html"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -64,7 +65,8 @@ func (hc *HttpClient) GetTitle() string {
 	if len(found) < 1 {
 		return ""
 	}
-	return found[1]
+	title := html.UnescapeString(found[1])
+	return title
 }
 
 func (hc *HttpClient) GetLocation() string {
@@ -73,7 +75,8 @@ func (hc *HttpClient) GetLocation() string {
 	if len(found) < 1 {
 		return ""
 	}
-	return found[1]
+	location := html.UnescapeString(found[1])
+	return location
 }
 
 func (hc *HttpClient) GetArticle() (title string, subtitle string, body string) {
@@ -82,10 +85,10 @@ func (hc *HttpClient) GetArticle() (title string, subtitle string, body string) 
 	if len(m) < 1 {
 		return
 	}
-	title = m[1]
+	title = html.UnescapeString(m[1])
 	re = regexp.MustCompile("<div class=\"hplats\">(.+?)</div>")
-	subtitle = re.FindStringSubmatch(hc.htmlSrc)[1]
+	subtitle = html.UnescapeString(re.FindStringSubmatch(hc.htmlSrc)[1])
 	re = regexp.MustCompile("<div id=\"hplaSnippet\">(.+?)</div>")
-	body = re.FindStringSubmatch(hc.htmlSrc)[1]
+	body = html.UnescapeString(re.FindStringSubmatch(hc.htmlSrc)[1])
 	return
 }
