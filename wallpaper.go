@@ -95,6 +95,10 @@ func (wallpaper *WallPaper) AddText(text string) {
 	pt := freetype.Pt(textX+10, textY+10+int(c.PointToFixed(wallpaper.config.FontSize)>>6))
 
 	lines := wallpaper.splitText(text)
+	w, h := wallpaper.getWidthAndHeight(len(lines))      // calculate width of the text
+	maskrect := image.Rect(x0, y0, x0+w, y0+h)           // background location and size
+	draw.Draw(rgba, maskrect, mask, image.ZP, draw.Over) // draw background
+
 	for _, s := range lines {
 		_, err := c.DrawString(s, pt)
 		if err != nil {
@@ -103,10 +107,6 @@ func (wallpaper *WallPaper) AddText(text string) {
 		pt.Y += c.PointToFixed(wallpaper.config.FontSize * wallpaper.config.FontSpacing)
 	}
 
-	w, h := wallpaper.getWidthAndHeight(len(lines)) // calculate width of the text
-
-	maskrect := image.Rect(x0, y0, x0+w, y0+h)           // background location and size
-	draw.Draw(rgba, maskrect, mask, image.ZP, draw.Over) // draw background
 	wallpaper.img = rgba
 }
 
