@@ -117,7 +117,7 @@ func (wallpaper WallPaper) splitText(s string) []string {
 
 	// detect line breakers
 	lineBreakerIndex := strings.Index(s, "\n")
-	if lineBreakerIndex != -1 {
+	if lineBreakerIndex != -1 && lineBreakerIndex < wallpaper.config.WordsPerLine {
 		sl = append(sl, s[:lineBreakerIndex])
 		s = s[lineBreakerIndex+1:]
 	}
