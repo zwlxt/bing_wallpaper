@@ -30,7 +30,13 @@ func (hc *HttpClient) GetImage() (string, []byte) {
 	imgurl := re.FindStringSubmatch(hc.htmlSrc)[1]
 	log.Println(imgurl)
 	u, _ := url.Parse(hc.Url)
-	resp, err := http.Get(u.Scheme + "://" + u.Hostname() + imgurl)
+	var resp *http.Response
+	var err error
+	if strings.HasPrefix(imgurl, "//") {
+		resp, err = http.Get(u.Scheme + ":" + imgurl)
+	} else {
+		resp, err = http.Get(u.Scheme + "://" + u.Hostname() + imgurl)
+	}
 	if err != nil {
 		log.Println("Unable to download image " + err.Error())
 	}
