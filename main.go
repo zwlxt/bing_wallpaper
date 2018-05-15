@@ -3,68 +3,66 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strings"
 
 	"fmt"
 	"log"
 )
 
-const (
-	URL  = "https://cn.bing.com/?FORM=HPENCN&setmkt=zh-cn&setlang=zh-cn"
-	DURL = "https://cn.bing.com/cnhp/life?IID=%s&IG=%s" // page containing description
-)
-
 func main() {
-	installDir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	wallpaperDir := installDir + "/wallpapers/"
-	fsStorage := &FileSystemStorage{Dir: wallpaperDir}
-
 	var config Config
+	installDir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 	configFile := installDir + "/config.yml"
 	if _, err := os.Stat(configFile); os.IsNotExist(err) {
 		log.Println("Using default config")
-		config = DefaultConfig()
+		config = Default()
 		config.Save(configFile)
 	} else {
 		log.Println("Using config: " + configFile)
 		config.Load(configFile)
 	}
 
+	wallpaperDir := config.WallpaperDir + "/wallpapers/"
+	fsStorage := &FileSystemStorage{Dir: wallpaperDir}
 	var ig, iid string
-	var imgdata []byte
-	for {
-		hc1 := &HttpClient{Url: URL}
-		hc1.FetchWebPage()
-
-		var fileName string
-		fileName, imgdata = hc1.GetImage()
-		fsStorage.Save(imgdata, fileName)
-		ig = hc1.GetIG()
+	var wallpaper *WallPaper
+	hasErr := true
+	for i := 0; i < 10; i++ {
+		bp := NewBingPage()
+		imgURL := bp.ImageURL()
+		wallpaper = FromURL(imgURL)
+		if wallpaper == nil {
+			continue
+		}
+		fileName := imgURL[strings.LastIndex(imgURL, "/")+1:]
+		wallpaper.SaveToFile(fsStorage, fileName, 100)
+		ig = bp.IG()
 		if ig == "" {
 			log.Println("Unable to get IG, Retry")
 			continue
 		}
-		iid = hc1.GetIID()
+		iid = bp.IID()
 		if iid == "" {
 			log.Println("Unable to get IID, Retry")
 			continue
 		}
+		hasErr = false
 		break
 	}
-	for {
-		hc2 := &HttpClient{Url: fmt.Sprintf(DURL, iid, ig)}
-		hc2.FetchWebPage()
-		title := hc2.GetTitle()
-		location := hc2.GetLocation()
-		_, _, article := hc2.GetArticle()
+	if hasErr {
+		panic("Failed after 10 retries")
+	}
+	for i := 0; i < 10; i++ {
+		bip := NewBingInfoPage(iid, ig)
+		title := bip.Title()
+		location := bip.Location()
+		_, _, article := bip.Article()
 		fmt.Println(title)
 		fmt.Println(location)
+		fmt.Println(article)
 
-		wp := NewWallPaper(config)
-		wp.Decode(imgdata)
-		wp.AddText(location + ", " + title + "\n" + article)
-		buf := wp.Encode()
-		fsStorage.Save(buf, "wp_out.jpg")
-		setWindowsWallPaper(installDir + "/wallpapers/wp_out.jpg")
+		wallpaper.SaveToFile(fsStorage, "wp_out.jpg", 100)
+		setWindowsWallPaper(wallpaperDir + "/wp_out.jpg")
 		log.Println("Done")
 		break
 	}
