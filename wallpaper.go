@@ -30,6 +30,10 @@ func (wallpaper *WallPaper) SetImage(img image.Image) {
 	wallpaper.img = img
 }
 
+func (wallpaper *WallPaper) SetTextDrawer(textDrawer TextDrawer) {
+	wallpaper.img = textDrawer.Draw(wallpaper.img)
+}
+
 func (wallpaper WallPaper) SaveToFile(storage StorageManager, fileName string, quality int) {
 	b := encode(wallpaper.img, quality)
 	storage.Save(b, fileName)

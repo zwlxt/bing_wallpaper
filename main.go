@@ -60,9 +60,18 @@ func main() {
 		fmt.Println(title)
 		fmt.Println(location)
 		fmt.Println(article)
-
+		if config.TextDrawerEnabled {
+			wallpaper.SetTextDrawer(&WordWrappingTextDrawer{
+				Config: config.TextDrawerConfig,
+				Text:   title + "," + location + "\n" + article,
+			})
+		}
 		wallpaper.SaveToFile(fsStorage, "wp_out.jpg", 100)
-		setWindowsWallPaper(wallpaperDir + "/wp_out.jpg")
+		absWallpaperPath, err := filepath.Abs(wallpaperDir + "/wp_out.jpg")
+		if err != nil {
+			panic(err)
+		}
+		setWindowsWallPaper(absWallpaperPath)
 		log.Println("Done")
 		break
 	}
