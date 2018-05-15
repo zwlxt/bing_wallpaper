@@ -8,13 +8,9 @@ import (
 )
 
 type Config struct {
-	WallpaperDir     string
-	FontFile         string
-	FontSize         float64
-	Width            int
-	OffsetX, OffsetY int
-	TextColor        color.RGBA
-	BackgroundColor  color.RGBA
+	WallpaperDir      string
+	TextDrawerEnabled bool
+	TextDrawerConfig  TextDrawerConfig
 }
 
 func (c Config) Save(filename string) {
@@ -38,13 +34,17 @@ func (c *Config) Load(filename string) {
 
 func Default() Config {
 	return Config{
-		FontFile:        "simsun.ttc",
-		FontSize:        20,
-		Width:           500,
-		OffsetX:         1500,
-		OffsetY:         50,
-		TextColor:       color.RGBA{255, 255, 255, 255},
-		BackgroundColor: color.RGBA{R: 0, G: 0, B: 0, A: 100},
-		WallpaperDir:    "./",
+		TextDrawerConfig: TextDrawerConfig{
+			FontFile:          "C:/Windows/Fonts/simsun.ttc",
+			FontSize:          20,
+			TextWidth:         500,
+			OffsetX:           1500,
+			OffsetY:           50,
+			TextColor:         color.RGBA{255, 255, 255, 255},
+			BackgroundColor:   color.RGBA{R: 0, G: 0, B: 0, A: 100},
+			BackgroundPadding: 16,
+		},
+		WallpaperDir:      "./",
+		TextDrawerEnabled: true,
 	}
 }
