@@ -20,6 +20,7 @@ type TextDrawerConfig struct {
 	FontFile          string
 	FontSize          float64
 	OffsetX, OffsetY  int
+	LineSpacing       int
 	TextWidth         int
 	TextColor         color.RGBA
 	BackgroundColor   color.RGBA
@@ -35,6 +36,7 @@ func (d WordWrappingTextDrawer) Draw(img image.Image) image.Image {
 	fontFile := d.Config.FontFile
 	fontSize := d.Config.FontSize
 	width := d.Config.TextWidth
+	lineSpacing := d.Config.LineSpacing
 	bgColor := d.Config.BackgroundColor
 	bgPadding := d.Config.BackgroundPadding
 	textColor := d.Config.TextColor
@@ -44,10 +46,10 @@ func (d WordWrappingTextDrawer) Draw(img image.Image) image.Image {
 	draw.Draw(canvas, img.Bounds(), img, image.ZP, draw.Src)
 	ff := fontFace(fontFile, fontSize)
 	lines := wordWrap(d.Text, width, ff)
-	height := paragraphHeight(lines, ff)
+	height := paragraphHeight(lines, ff, lineSpacing)
 	drawBackground(canvas, bgColor, image.Rect(x-bgPadding, y-bgPadding,
 		x+bgPadding+width, y+bgPadding+height))
-	drawTextWordWrap(canvas, lines, ff, textColor, x, y)
+	drawTextWordWrap(canvas, lines, ff, textColor, lineSpacing, x, y)
 	return canvas
 }
 
@@ -68,8 +70,9 @@ func drawBackground(canvas draw.Image, c color.Color, rect image.Rectangle) {
 	draw.Draw(canvas, rect, bg, image.ZP, draw.Over)
 }
 
-func paragraphHeight(text []string, ff font.Face) int {
-	return ff.Metrics().Ascent.Floor() + ff.Metrics().Height.Floor()*len(text)
+func paragraphHeight(text []string, ff font.Face, lineSpacing int) int {
+	return ff.Metrics().Ascent.Floor() +
+		(ff.Metrics().Height.Floor()+lineSpacing)*len(text) - lineSpacing
 }
 
 func wordWrap(text string, width int, ff font.Face) []string {
@@ -108,7 +111,9 @@ func wordWrap(text string, width int, ff font.Face) []string {
 	return lines
 }
 
-func drawTextWordWrap(canvas draw.Image, lines []string, ff font.Face, tc color.Color, x, y int) {
+func drawTextWordWrap(canvas draw.Image, lines []string,
+	ff font.Face, tc color.Color, lineSpacing, x, y int) {
+
 	point := fixed.Point26_6{
 		// X offset
 		X: fixed.I(x),
@@ -128,6 +133,7 @@ func drawTextWordWrap(canvas draw.Image, lines []string, ff font.Face, tc color.
 	for _, line := range lines {
 		drawer.DrawString(line)
 		point.Y += ff.Metrics().Height
+		point.Y += fixed.I(lineSpacing)
 		drawer.Dot = point
 	}
 }

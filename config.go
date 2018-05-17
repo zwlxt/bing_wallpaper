@@ -37,7 +37,8 @@ func Default() Config {
 		TextDrawerConfig: TextDrawerConfig{
 			FontFile:          "C:/Windows/Fonts/simsun.ttc",
 			FontSize:          20,
-			TextWidth:         500,
+			TextWidth:         100,
+			LineSpacing:       2,
 			OffsetX:           1500,
 			OffsetY:           50,
 			TextColor:         color.RGBA{255, 255, 255, 255},
