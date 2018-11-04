@@ -10,6 +10,7 @@ import (
 type Config struct {
 	WallpaperDir      string
 	TextDrawerEnabled bool
+	LastUpdate        int64
 	TextDrawerConfig  TextDrawerConfig
 }
 

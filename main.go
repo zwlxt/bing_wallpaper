@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"fmt"
 	"log"
@@ -22,6 +23,13 @@ func main() {
 		config.Load(configFile)
 	}
 
+	lastUpdate := config.LastUpdate
+	lastUpdateTime := time.Unix(lastUpdate, 0)
+	if lastUpdateTime.Day() == time.Now().Day() {
+		log.Println("Wallpaper is already the latest, exiting")
+		os.Exit(0)
+	}
+
 	wallpaperDir := config.WallpaperDir + "/wallpapers/"
 	fsStorage := &FileSystemStorage{Dir: wallpaperDir}
 	var ig, iid string
@@ -38,12 +46,12 @@ func main() {
 		wallpaper.SaveToFile(fsStorage, fileName, 100)
 		ig = bp.IG()
 		if ig == "" {
-			log.Println("Unable to get IG, Retry")
+			log.Println("Unable to get IG, retrying")
 			continue
 		}
 		iid = bp.IID()
 		if iid == "" {
-			log.Println("Unable to get IID, Retry")
+			log.Println("Unable to get IID, retrying")
 			continue
 		}
 		hasErr = false
@@ -63,7 +71,7 @@ func main() {
 		if config.TextDrawerEnabled {
 			wallpaper.SetTextDrawer(&WordWrappingTextDrawer{
 				Config: config.TextDrawerConfig,
-				Text:   title + "," + location + "\n" + article,
+				Text:   title + ", " + location + "\n" + article,
 			})
 		}
 		wallpaper.SaveToFile(fsStorage, "wp_out.jpg", 100)
@@ -72,7 +80,10 @@ func main() {
 			panic(err)
 		}
 		setWindowsWallPaper(absWallpaperPath)
+		config.LastUpdate = time.Now().Unix()
+		config.Save(configFile)
 		log.Println("Done")
 		break
 	}
+	os.Exit(0)
 }
