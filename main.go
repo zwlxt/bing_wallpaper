@@ -23,15 +23,17 @@ func main() {
 		config.Load(configFile)
 	}
 
+	wallpaperDir := config.WallpaperDir + "/wallpapers/"
+	fsStorage := &FileSystemStorage{Dir: wallpaperDir}
+
 	lastUpdate := config.LastUpdate
 	lastUpdateTime := time.Unix(lastUpdate, 0)
 	if lastUpdateTime.Day() == time.Now().Day() {
+		setWallPaper(wallpaperDir)
 		log.Println("Wallpaper is already the latest, exiting")
 		os.Exit(0)
 	}
 
-	wallpaperDir := config.WallpaperDir + "/wallpapers/"
-	fsStorage := &FileSystemStorage{Dir: wallpaperDir}
 	var ig, iid string
 	var wallpaper *WallPaper
 	hasErr := true
@@ -75,15 +77,19 @@ func main() {
 			})
 		}
 		wallpaper.SaveToFile(fsStorage, "wp_out.jpg", 100)
-		absWallpaperPath, err := filepath.Abs(wallpaperDir + "/wp_out.jpg")
-		if err != nil {
-			panic(err)
-		}
-		setWindowsWallPaper(absWallpaperPath)
+
 		config.LastUpdate = time.Now().Unix()
 		config.Save(configFile)
 		log.Println("Done")
 		break
 	}
 	os.Exit(0)
+}
+
+func setWallPaper(dir string) {
+	absWallpaperPath, err := filepath.Abs(dir + "/wp_out.jpg")
+	if err != nil {
+		panic(err)
+	}
+	setWindowsWallPaper(absWallpaperPath)
 }
