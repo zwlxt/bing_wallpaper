@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +12,10 @@ import (
 )
 
 func main() {
+	var forceUpdate bool
+	flag.BoolVar(&forceUpdate, "f", false, "Force update wallpaper")
+	flag.Parse()
+
 	var config Config
 	installDir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 	configFile := installDir + "/config.yml"
@@ -26,12 +31,14 @@ func main() {
 	wallpaperDir := config.WallpaperDir + "/wallpapers/"
 	fsStorage := &FileSystemStorage{Dir: wallpaperDir}
 
-	lastUpdate := config.LastUpdate
-	lastUpdateTime := time.Unix(lastUpdate, 0)
-	if lastUpdateTime.Day() == time.Now().Day() {
-		setWallPaper(wallpaperDir)
-		log.Println("Wallpaper is already the latest, exiting")
-		os.Exit(0)
+	if !forceUpdate {
+		lastUpdate := config.LastUpdate
+		lastUpdateTime := time.Unix(lastUpdate, 0)
+		if lastUpdateTime.Day() == time.Now().Day() {
+			setWallPaper(wallpaperDir)
+			log.Println("Wallpaper is already the latest, exiting")
+			os.Exit(0)
+		}
 	}
 
 	var ig, iid string
