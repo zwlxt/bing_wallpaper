@@ -21,13 +21,14 @@ func NewBingPage() *BingPage {
 }
 
 func (b BingPage) IID() string {
-	re := regexp.MustCompile("_iid=\"(\\w{4}\\.\\d{4})\">")
+	re := regexp.MustCompile("data-ajaxiid=\"(\\d+?)\"")
 	found := re.FindStringSubmatch(b.src)
 	if len(found) < 1 {
 		return ""
 	}
-	log.Println("IID:" + found[1])
-	return found[1]
+	iid := "SERP." + found[1]
+	log.Println("IID:" + iid)
+	return iid
 }
 
 func (b BingPage) IG() string {
