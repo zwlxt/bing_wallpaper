@@ -84,7 +84,7 @@ func main() {
 			})
 		}
 		wallpaper.SaveToFile(fsStorage, "wp_out.jpg", 100)
-
+		setWallPaper(wallpaperDir)
 		config.LastUpdate = time.Now().Unix()
 		config.Save(configFile)
 		log.Println("Done")
